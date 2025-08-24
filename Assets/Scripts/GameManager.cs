@@ -8,7 +8,8 @@ public class GameManager : MonoBehaviour
     [Header("UI Elements")]
     public TextMeshProUGUI scoreText;
     public TextMeshProUGUI coinText;
-    public TextMeshProUGUI collisionText; 
+    public TextMeshProUGUI collisionText;
+    public TextMeshProUGUI timerText;
     public GameObject gameOverPanel;
     public TextMeshProUGUI finalScoreText;
     public TextMeshProUGUI finalCoinText;
@@ -23,11 +24,13 @@ public class GameManager : MonoBehaviour
     [Header("Game Settings")]
     public int scorePerPipe = 1;
     public int coinValue = 1;
+    public float gameTime = 15f;
 
     private int currentScore = 0;
     private int coinCount = 0;
     private bool gameActive = true; 
-    private int collisionCount = 0; 
+    private int collisionCount = 0;
+    private float currentTime;
 
     public static GameManager Instance; // Singleton pattern
 
@@ -72,10 +75,13 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("GameManager started!");
 
+        currentTime = gameTime;
+
         // Initialize UI
         UpdateScoreUI();
         UpdateCoinUI();
         UpdateCollisionUI();
+        UpdateTimerUI();
 
         if (gameOverPanel != null)
         {
@@ -104,6 +110,35 @@ public class GameManager : MonoBehaviour
         }
 
         Debug.Log("GameManager setup complete");
+    }
+
+    void Update()
+    {
+        if (!gameActive) return;
+
+        // Countdown timer
+        currentTime -= Time.deltaTime;
+        UpdateTimerUI();
+
+        // Check if time is up
+        if (currentTime <= 0)
+        {
+            currentTime = 0;
+            GameOver();
+        }
+    }
+
+    private void UpdateTimerUI()
+    {
+        if (timerText != null)
+        {
+            // Display time in seconds with 1 decimal place
+            timerText.text = "Time: " + currentTime.ToString("F1") + "s";
+        }
+        else
+        {
+            Debug.LogWarning("Timer Text not assigned!");
+        }
     }
 
     public void AddScore(int points = -1)
@@ -206,5 +241,10 @@ public class GameManager : MonoBehaviour
     public int GetCoinCount()
     {
         return coinCount;
+    }
+
+    public float GetCurrentTime()
+    {
+        return currentTime;
     }
 }
