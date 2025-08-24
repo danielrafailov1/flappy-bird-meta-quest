@@ -24,7 +24,7 @@ public class GameManager : MonoBehaviour
     [Header("Game Settings")]
     public int scorePerPipe = 1;
     public int coinValue = 1;
-    public float gameTime = 15f;
+    public float gameTime = 30f;
 
     private int currentScore = 0;
     private int coinCount = 0;
