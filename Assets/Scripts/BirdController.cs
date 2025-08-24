@@ -69,8 +69,6 @@ public class BirdController : MonoBehaviour
             {
                 currentPosition.y = Mathf.Clamp(currentPosition.y, minY, maxY);
             }
-
-            Debug.Log("Moving bird from " + oldPos.y + " to " + currentPosition.y);
         }
     }
 

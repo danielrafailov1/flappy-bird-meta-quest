@@ -17,6 +17,7 @@ public class BirdCollision : MonoBehaviour
 
     private bool hasCollided = false;
     private bool collisionEnabled = false;
+    private bool hasHitGround = false;  // NEW: Track if ground collision already registered
 
     void Start()
     {
@@ -67,15 +68,25 @@ public class BirdCollision : MonoBehaviour
         // Check if bird has hit the ground using Y position
         if (useGroundY && collisionEnabled && !hasCollided)
         {
-            if (transform.position.y <= groundY)
+            // Check if bird is currently at/below ground level
+            bool isAtGround = transform.position.y <= groundY;
+
+            // Only register collision if bird just hit the ground (transition from above to at/below)
+            if (isAtGround && !hasHitGround)
             {
+                hasHitGround = true;  // Mark that we've registered this ground hit
                 Debug.Log("Bird hit ground at Y position: " + transform.position.y);
-                //GameOver();
 
                 if (GameManager.Instance != null)
                 {
                     GameManager.Instance.AddCollision();
                 }
+            }
+            // Reset the flag if bird moves above ground level
+            else if (!isAtGround && hasHitGround)
+            {
+                hasHitGround = false;  // Allow for future ground collisions
+                Debug.Log("Bird moved above ground level, ready for next ground collision");
             }
         }
     }
