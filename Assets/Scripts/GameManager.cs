@@ -8,9 +8,11 @@ public class GameManager : MonoBehaviour
     [Header("UI Elements")]
     public TextMeshProUGUI scoreText;
     public TextMeshProUGUI coinText;
+    public TextMeshProUGUI collisionText; 
     public GameObject gameOverPanel;
     public TextMeshProUGUI finalScoreText;
     public TextMeshProUGUI finalCoinText;
+    public TextMeshProUGUI finalCollisionText; 
     public TextMeshProUGUI totalScoreText;
     public Button restartButton;
 
@@ -24,9 +26,34 @@ public class GameManager : MonoBehaviour
 
     private int currentScore = 0;
     private int coinCount = 0;
-    private bool gameActive = true;
+    private bool gameActive = true; 
+    private int collisionCount = 0; 
 
     public static GameManager Instance; // Singleton pattern
+
+    public void AddCollision()
+    {
+        collisionCount++;
+        UpdateCollisionUI();
+        Debug.Log("Collision count: " + collisionCount);
+    }
+
+    private void UpdateCollisionUI()
+    {
+        if (collisionText != null)
+        {
+            collisionText.text = "Collisions: " + collisionCount;
+        }
+        else
+        {
+            Debug.LogWarning("Collision Text not assigned!");
+        }
+    }
+
+    public int GetCollisionCount()
+    {
+        return collisionCount;
+    }
 
     void Awake()
     {
@@ -48,6 +75,7 @@ public class GameManager : MonoBehaviour
         // Initialize UI
         UpdateScoreUI();
         UpdateCoinUI();
+        UpdateCollisionUI();
 
         if (gameOverPanel != null)
         {
@@ -117,6 +145,7 @@ public class GameManager : MonoBehaviour
         if (finalScoreText != null) finalScoreText.text = "Score: " + currentScore;
         if (finalCoinText != null) finalCoinText.text = "Coins: " + coinCount;
         if (totalScoreText != null) totalScoreText.text = "Total: " + finalScore;
+        if (finalCollisionText != null) finalCollisionText.text = "Collisions: " + collisionCount;
 
         // Show game over panel
         if (gameOverPanel != null)

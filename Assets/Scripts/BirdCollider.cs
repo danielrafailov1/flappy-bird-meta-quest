@@ -70,7 +70,12 @@ public class BirdCollision : MonoBehaviour
             if (transform.position.y <= groundY)
             {
                 Debug.Log("Bird hit ground at Y position: " + transform.position.y);
-                GameOver();
+                //GameOver();
+
+                if (GameManager.Instance != null)
+                {
+                    GameManager.Instance.AddCollision();
+                }
             }
         }
     }
@@ -91,7 +96,7 @@ public class BirdCollision : MonoBehaviour
 
         Debug.Log("TRIGGER: Bird triggered with: " + other.gameObject.name + " (Tag: '" + other.tag + "')");
 
-        if (hasCollided) return; // Prevent multiple collisions
+        //if (hasCollided) return;
 
         // Check what we collided with
         if (other.CompareTag(coinTag))
@@ -106,7 +111,12 @@ public class BirdCollision : MonoBehaviour
         else if (other.CompareTag(pipeTag))
         {
             Debug.Log("Hit a pipe!");
-            GameOver();
+            //GameOver();
+
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.AddCollision();
+            }
         }
         else
         {
@@ -118,20 +128,30 @@ public class BirdCollision : MonoBehaviour
     {
         Debug.Log("Bird collided with: " + collision.gameObject.name + " (Tag: " + collision.gameObject.tag + ")");
 
-        if (hasCollided) return;
+        //if (hasCollided) return;
 
         // Handle solid collisions (pipes, ground, etc.)
         if (collision.gameObject.CompareTag(pipeTag) ||
             collision.gameObject.CompareTag("Ground") ||
             collision.gameObject.CompareTag("Obstacle"))
         {
-            GameOver();
+            //GameOver();
+
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.AddCollision();
+            }
         }
         else
         {
             // Hit something else with solid collision
             Debug.Log("Solid collision with untagged object: " + collision.gameObject.name);
-            GameOver(); // End game anyway for now
+            //GameOver(); // End game anyway for now
+
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.AddCollision();
+            }
         }
     }
 
@@ -188,6 +208,7 @@ public class BirdCollision : MonoBehaviour
         // Trigger game over
         if (GameManager.Instance != null)
         {
+            GameManager.Instance.AddCollision();
             GameManager.Instance.GameOver();
         }
 
