@@ -102,7 +102,6 @@ public class BirdCollision : MonoBehaviour
         else if (other.CompareTag(scoreZoneTag))
         {
             Debug.Log("Hit score zone!");
-            AddScore();
         }
         else if (other.CompareTag(pipeTag))
         {
@@ -161,8 +160,16 @@ public class BirdCollision : MonoBehaviour
         Debug.Log("Coin collected!");
     }
 
+    private float lastScoreTime = 0f;
+    private float scoreCooldown = 1f;
+
     private void AddScore()
     {
+        // Prevent multiple scores in quick succession
+        if (Time.time - lastScoreTime < scoreCooldown) return;
+
+        lastScoreTime = Time.time;
+
         // Add score for passing pipe
         if (GameManager.Instance != null)
         {

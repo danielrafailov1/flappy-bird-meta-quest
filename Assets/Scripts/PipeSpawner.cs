@@ -113,6 +113,38 @@ public class PipeSpawner : MonoBehaviour
            
         }
 
+     
+        if (bottomPos != Vector3.zero || topPos != Vector3.zero)
+        {
+            Vector3 scoreZonePos;
+            if (spawnBottomNext) // We just spawned a bottom pipe
+            {
+                scoreZonePos = new Vector3(spawnX, bottomPos.y + 2f, 0); // Position above bottom pipe
+            }
+            else // We just spawned a top pipe
+            {
+                scoreZonePos = new Vector3(spawnX, topPos.y - 2f, 0); // Position below top pipe
+            }
+
+            // Create score zone GameObject
+            GameObject scoreZone = new GameObject("ScoreZone");
+            scoreZone.transform.position = scoreZonePos;
+            scoreZone.tag = "ScoreZone";
+
+            // Add collider
+            BoxCollider scoreCollider = scoreZone.AddComponent<BoxCollider>();
+            scoreCollider.isTrigger = true;
+            scoreCollider.size = new Vector3(0.5f, 3f, 1f); // Adjust height as needed for the gap
+
+            // Add ScoreZone script
+            scoreZone.AddComponent<ScoreZone>();
+
+            // Add movement
+            scoreZone.AddComponent<MoveLeft>().speed = moveSpeed;
+
+            Debug.Log("Created score zone at: " + scoreZonePos);
+        }
+
         // Increment pipe counter
         pipeCounter++;
 

@@ -83,6 +83,9 @@ public class GameManager : MonoBehaviour
         if (!gameActive) return;
 
         if (points == -1) points = scorePerPipe;
+
+        Debug.Log("Adding " + points + " points to score");
+
         currentScore += points;
         UpdateScoreUI();
     }
