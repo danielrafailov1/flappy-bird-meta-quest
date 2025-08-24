@@ -4,7 +4,7 @@ public class BirdSpawner : MonoBehaviour
 {
     [Header("Bird Settings")]
     public GameObject birdPrefab;         // Your bird prefab
-    public Vector3 spawnPosition = new Vector3(-5, 0, 0);  // Move bird far left of pipes
+    public Vector3 spawnPosition = new Vector3(-5, 2, 0);  // Move bird far left of pipes
     public bool spawnOnStart = true;      // Spawn bird automatically on start
 
     [Header("Audio Settings")]

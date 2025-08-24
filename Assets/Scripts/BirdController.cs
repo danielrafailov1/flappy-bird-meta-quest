@@ -4,8 +4,8 @@ public class BirdController : MonoBehaviour
 {
     [Header("Movement Settings")]
     public float moveSpeed = 5f;          // Speed of vertical movement
-    public float minY = -5f;              // Minimum Y position
-    public float maxY = 5f;               // Maximum Y position
+    public float minY = 0f;              // Minimum Y position
+    public float maxY = 6f;               // Maximum Y position
     public bool clampToLimits = true;     // Whether to clamp bird within Y limits
 
     [Header("Input Settings")]

@@ -7,6 +7,10 @@ public class BirdCollision : MonoBehaviour
     public string coinTag = "Coin";
     public string scoreZoneTag = "ScoreZone";
 
+    [Header("Ground Detection")]
+    public float groundY = 0f;  // Y position considered as ground level
+    public bool useGroundY = true;  // Enable/disable ground Y position check
+
     [Header("Audio")]
     public AudioClip coinSound;  // Drag your coin MP3 here in the Inspector
     private AudioSource audioSource;
@@ -55,6 +59,19 @@ public class BirdCollision : MonoBehaviour
             audioSource = gameObject.AddComponent<AudioSource>();
             audioSource.playOnAwake = false; // Don't play automatically
             Debug.Log("Added AudioSource to bird for coin sounds");
+        }
+    }
+
+    void Update()
+    {
+        // Check if bird has hit the ground using Y position
+        if (useGroundY && collisionEnabled && !hasCollided)
+        {
+            if (transform.position.y <= groundY)
+            {
+                Debug.Log("Bird hit ground at Y position: " + transform.position.y);
+                GameOver();
+            }
         }
     }
 
