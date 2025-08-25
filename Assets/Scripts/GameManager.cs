@@ -315,15 +315,20 @@ public class GameManager : MonoBehaviour
 
         // Countdown timer
         currentTime -= Time.deltaTime;
-        UpdateTimerUI();
-        UpdateProgressBar();  // NEW: Update progress bar each frame
 
-        // Check if time is up
+        // Check if time is up FIRST
         if (currentTime <= 0)
         {
-            currentTime = 0;
+            currentTime = 0;  // Clamp to exactly 0
+            UpdateTimerUI();
+            UpdateProgressBar();  // Update progress bar to show 100% filled
             GameOver();
+            return;  // Exit update to prevent further updates
         }
+
+        // Normal updates
+        UpdateTimerUI();
+        UpdateProgressBar();
     }
 
     private void UpdateTimerUI()
