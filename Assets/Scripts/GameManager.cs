@@ -13,9 +13,17 @@ public class GameManager : MonoBehaviour
     public GameObject gameOverPanel;
     public TextMeshProUGUI finalScoreText;
     public TextMeshProUGUI finalCoinText;
-    public TextMeshProUGUI finalCollisionText; 
+    public TextMeshProUGUI finalCollisionText;
     public TextMeshProUGUI totalScoreText;
     public Button restartButton;
+
+    [Header("Game State UI")]
+    public GameObject startPanel;           // Panel with start button
+    public Button startButton;             // Start game button
+    public GameObject pausePanel;           // Panel with resume/quit options
+    public Button pauseButton;              // Pause button (top-right corner)
+    public Button resumeButton;             // Resume from pause
+    public Button quitButton;               // Quit to start screen
 
     [Header("Audio")]
     public AudioSource audioSource;
@@ -28,7 +36,9 @@ public class GameManager : MonoBehaviour
 
     private int currentScore = 0;
     private int coinCount = 0;
-    private bool gameActive = true; 
+    private bool gameActive = false;        // Changed to false initially
+    private bool gameStarted = false;       // Track if game has been started
+    private bool gamePaused = false;        // Track pause state
     private int collisionCount = 0;
     private float currentTime;
 
@@ -36,6 +46,8 @@ public class GameManager : MonoBehaviour
 
     public void AddCollision()
     {
+        if (!gameActive || gamePaused) return;
+
         collisionCount++;
         UpdateCollisionUI();
         Debug.Log("Collision count: " + collisionCount);
@@ -83,21 +95,15 @@ public class GameManager : MonoBehaviour
         UpdateCollisionUI();
         UpdateTimerUI();
 
-        if (gameOverPanel != null)
-        {
-            gameOverPanel.SetActive(false);
-            Debug.Log("Game over panel hidden");
-        }
-        else
-        {
-            Debug.LogWarning("Game Over Panel not assigned!");
-        }
+        // Show start screen initially
+        ShowStartScreen();
 
-        // Setup restart button
-        if (restartButton != null)
-        {
-            restartButton.onClick.AddListener(RestartGame);
-        }
+        // Hide other panels
+        if (gameOverPanel != null) gameOverPanel.SetActive(false);
+        if (pausePanel != null) pausePanel.SetActive(false);
+
+        // Setup buttons
+        SetupButtons();
 
         // Setup audio source
         if (audioSource == null)
@@ -112,9 +118,185 @@ public class GameManager : MonoBehaviour
         Debug.Log("GameManager setup complete");
     }
 
+    private void SetupButtons()
+    {
+        // Start button
+        if (startButton != null)
+        {
+            startButton.onClick.AddListener(StartGame);
+        }
+        else
+        {
+            Debug.LogWarning("Start Button not assigned!");
+        }
+
+        // Pause button
+        if (pauseButton != null)
+        {
+            pauseButton.onClick.AddListener(PauseGame);
+        }
+        else
+        {
+            Debug.LogWarning("Pause Button not assigned!");
+        }
+
+        // Resume button
+        if (resumeButton != null)
+        {
+            resumeButton.onClick.AddListener(ResumeGame);
+        }
+        else
+        {
+            Debug.LogWarning("Resume Button not assigned!");
+        }
+
+        // Quit button
+        if (quitButton != null)
+        {
+            quitButton.onClick.AddListener(QuitToStart);
+        }
+        else
+        {
+            Debug.LogWarning("Quit Button not assigned!");
+        }
+
+        // Restart button (existing)
+        if (restartButton != null)
+        {
+            restartButton.onClick.AddListener(RestartGame);
+        }
+    }
+
+    private void ShowStartScreen()
+    {
+        if (startPanel != null)
+        {
+            startPanel.SetActive(true);
+        }
+        else
+        {
+            Debug.LogWarning("Start Panel not assigned!");
+        }
+
+        // Hide pause button during start screen
+        if (pauseButton != null)
+        {
+            pauseButton.gameObject.SetActive(false);
+        }
+
+        // Stop background music
+        StopBackgroundMusic();
+    }
+
+    public void StartGame()
+    {
+        Debug.Log("Starting game!");
+
+        gameActive = true;
+        gameStarted = true;
+        gamePaused = false;
+
+        // Hide start panel
+        if (startPanel != null)
+        {
+            startPanel.SetActive(false);
+        }
+
+        // Show pause button
+        if (pauseButton != null)
+        {
+            pauseButton.gameObject.SetActive(true);
+        }
+
+        // Reset game state
+        currentScore = 0;
+        coinCount = 0;
+        collisionCount = 0;
+        currentTime = gameTime;
+
+        // Update UI
+        UpdateScoreUI();
+        UpdateCoinUI();
+        UpdateCollisionUI();
+        UpdateTimerUI();
+
+        // Start background music
+        StartBackgroundMusic();
+
+        // Resume time
+        Time.timeScale = 1f;
+    }
+
+    public void PauseGame()
+    {
+        if (!gameActive || !gameStarted) return;
+
+        Debug.Log("Pausing game!");
+
+        gamePaused = true;
+
+        // Show pause panel
+        if (pausePanel != null)
+        {
+            pausePanel.SetActive(true);
+        }
+
+        // Pause background music
+        PauseBackgroundMusic();
+
+        // Pause time
+        Time.timeScale = 0f;
+    }
+
+    public void ResumeGame()
+    {
+        if (!gameStarted) return;
+
+        Debug.Log("Resuming game!");
+
+        gamePaused = false;
+
+        // Hide pause panel
+        if (pausePanel != null)
+        {
+            pausePanel.SetActive(false);
+        }
+
+        // Resume background music
+        ResumeBackgroundMusic();
+
+        // Resume time
+        Time.timeScale = 1f;
+    }
+
+    public void QuitToStart()
+    {
+        Debug.Log("Quitting to start screen!");
+
+        // Reset game state
+        gameActive = false;
+        gameStarted = false;
+        gamePaused = false;
+
+        // Hide pause panel
+        if (pausePanel != null)
+        {
+            pausePanel.SetActive(false);
+        }
+
+        // Show start screen
+        ShowStartScreen();
+
+        // Resume time for UI interactions
+        Time.timeScale = 1f;
+
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
     void Update()
     {
-        if (!gameActive) return;
+        // Only update timer if game is active and not paused
+        if (!gameActive || !gameStarted || gamePaused) return;
 
         // Countdown timer
         currentTime -= Time.deltaTime;
@@ -143,7 +325,7 @@ public class GameManager : MonoBehaviour
 
     public void AddScore(int points = -1)
     {
-        if (!gameActive) return;
+        if (!gameActive || gamePaused) return;
 
         if (points == -1) points = scorePerPipe;
 
@@ -155,7 +337,7 @@ public class GameManager : MonoBehaviour
 
     public void CollectCoin()
     {
-        if (!gameActive) return;
+        if (!gameActive || gamePaused) return;
 
         coinCount += coinValue;
         UpdateCoinUI();
@@ -166,11 +348,21 @@ public class GameManager : MonoBehaviour
         if (!gameActive) return;
 
         gameActive = false;
+        gamePaused = false;
+
+        // Stop background music
+        StopBackgroundMusic();
 
         // Play death sound
         if (dieSound != null && audioSource != null)
         {
             audioSource.PlayOneShot(dieSound);
+        }
+
+        // Hide pause button
+        if (pauseButton != null)
+        {
+            pauseButton.gameObject.SetActive(false);
         }
 
         // Calculate final score (current score + coins)
@@ -201,6 +393,63 @@ public class GameManager : MonoBehaviour
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
+    // Background Music Control Methods
+    private void StartBackgroundMusic()
+    {
+        GameObject musicObject = GameObject.Find("BackgroundMusic");
+        if (musicObject != null)
+        {
+            AudioSource musicSource = musicObject.GetComponent<AudioSource>();
+            if (musicSource != null && !musicSource.isPlaying)
+            {
+                musicSource.Play();
+                Debug.Log("Background music started");
+            }
+        }
+    }
+
+    private void PauseBackgroundMusic()
+    {
+        GameObject musicObject = GameObject.Find("BackgroundMusic");
+        if (musicObject != null)
+        {
+            AudioSource musicSource = musicObject.GetComponent<AudioSource>();
+            if (musicSource != null && musicSource.isPlaying)
+            {
+                musicSource.Pause();
+                Debug.Log("Background music paused");
+            }
+        }
+    }
+
+    private void ResumeBackgroundMusic()
+    {
+        GameObject musicObject = GameObject.Find("BackgroundMusic");
+        if (musicObject != null)
+        {
+            AudioSource musicSource = musicObject.GetComponent<AudioSource>();
+            if (musicSource != null && !musicSource.isPlaying)
+            {
+                musicSource.UnPause();
+                Debug.Log("Background music resumed");
+            }
+        }
+    }
+
+    private void StopBackgroundMusic()
+    {
+        GameObject musicObject = GameObject.Find("BackgroundMusic");
+        if (musicObject != null)
+        {
+            AudioSource musicSource = musicObject.GetComponent<AudioSource>();
+            if (musicSource != null && musicSource.isPlaying)
+            {
+                musicSource.Stop();
+                Debug.Log("Background music stopped");
+            }
+        }
+    }
+
     private void UpdateScoreUI()
     {
         if (scoreText != null)
@@ -227,10 +476,20 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // Getters for other scripts
+    // Updated getters for other scripts
     public bool IsGameActive()
     {
-        return gameActive;
+        return gameActive && !gamePaused;
+    }
+
+    public bool IsGameStarted()
+    {
+        return gameStarted;
+    }
+
+    public bool IsGamePaused()
+    {
+        return gamePaused;
     }
 
     public int GetCurrentScore()
