@@ -2,6 +2,7 @@
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
+using System.Collections;
 
 public class GameManager : MonoBehaviour
 {
@@ -26,6 +27,10 @@ public class GameManager : MonoBehaviour
     public Button resumeButton;             // Resume from pause
     public Button quitButton;               // Quit to start screen
 
+    [Header("Encouragement System")]
+    public TextMeshProUGUI encouragementText;
+    public float encouragementDisplayTime = 2f;
+
     [Header("Audio")]
     public AudioSource audioSource;
     public AudioClip dieSound;
@@ -45,6 +50,50 @@ public class GameManager : MonoBehaviour
     private bool gamePaused = false;        // Track pause state
     private int collisionCount = 0;
     private float currentTime;
+
+    // Encouragement system
+    private string[] encouragementMessages = {
+        "Nice flying!",
+        "Keep it up!",
+        "You're doing great!",
+        "Fantastic!",
+        "Amazing control!",
+        "Perfect timing!",
+        "Incredible!",
+        "You're on fire!",
+        "Outstanding!",
+        "Masterful flying!"
+    };
+
+    private string[] coinMessages = {
+        "Shiny!",
+        "Coin master!",
+        "Nice grab!",
+        "Collector!",
+        "Golden touch!",
+        "Treasure hunter!"
+    };
+
+    private string[] timeMessages = {
+        "Still going strong!",
+        "Time flies when you're flying!",
+        "Endurance champion!",
+        "Unstoppable!",
+        "Marathon flyer!",
+        "Time master!"
+    };
+
+    private string[] nearMissMessages = {
+        "Close call!",
+        "Phew! That was close!",
+        "Narrow escape!",
+        "Just barely made it!",
+        "Skilled dodge!",
+        "Threading the needle!"
+    };
+
+    private Coroutine encouragementCoroutine;
+    private float lastTimeEncouragement = 0f;
 
     public static GameManager Instance; // Singleton pattern
 
@@ -99,6 +148,12 @@ public class GameManager : MonoBehaviour
         UpdateCollisionUI();
         UpdateTimerUI();
         UpdateProgressBar();  // NEW: Initialize progress bar
+
+        // Hide encouragement text initially
+        if (encouragementText != null)
+        {
+            encouragementText.gameObject.SetActive(false);
+        }
 
         // Show start screen initially
         ShowStartScreen();
@@ -218,6 +273,7 @@ public class GameManager : MonoBehaviour
         coinCount = 0;
         collisionCount = 0;
         currentTime = gameTime;
+        lastTimeEncouragement = 0f;
 
         // Update UI
         UpdateScoreUI();
@@ -316,6 +372,9 @@ public class GameManager : MonoBehaviour
         // Countdown timer
         currentTime -= Time.deltaTime;
 
+        // Check for time-based encouragement
+        CheckTimeBasedEncouragement();
+
         // Check if time is up FIRST
         if (currentTime <= 0)
         {
@@ -329,6 +388,18 @@ public class GameManager : MonoBehaviour
         // Normal updates
         UpdateTimerUI();
         UpdateProgressBar();
+    }
+
+    private void CheckTimeBasedEncouragement()
+    {
+        float survivedTime = gameTime - currentTime;
+
+        // Show encouragement every 10 seconds
+        if (survivedTime >= 10f && survivedTime - lastTimeEncouragement >= 10f)
+        {
+            lastTimeEncouragement = survivedTime;
+            ShowTimeBasedEncouragement();
+        }
     }
 
     private void UpdateTimerUI()
@@ -379,6 +450,12 @@ public class GameManager : MonoBehaviour
 
         currentScore += points;
         UpdateScoreUI();
+
+        // Show encouragement every 3rd score
+        if (currentScore > 0 && currentScore % 3 == 0)
+        {
+            ShowScoreBasedEncouragement();
+        }
     }
 
     public void CollectCoin()
@@ -387,6 +464,76 @@ public class GameManager : MonoBehaviour
 
         coinCount += coinValue;
         UpdateCoinUI();
+
+        // Show coin-specific encouragement
+        ShowCoinEncouragement();
+    }
+
+    public void ShowNearMissEncouragement()
+    {
+        if (!gameActive || gamePaused) return;
+
+        // 30% chance to show near-miss encouragement
+        if (Random.Range(0f, 1f) < 0.3f)
+        {
+            string message = nearMissMessages[Random.Range(0, nearMissMessages.Length)];
+            ShowEncouragement(message);
+        }
+    }
+
+    private void ShowScoreBasedEncouragement()
+    {
+        string[] messages = GetScoreBasedMessages(currentScore);
+        string message = messages[Random.Range(0, messages.Length)];
+        ShowEncouragement(message);
+    }
+
+    private void ShowCoinEncouragement()
+    {
+        string message = coinMessages[Random.Range(0, coinMessages.Length)];
+        ShowEncouragement(message);
+    }
+
+    private void ShowTimeBasedEncouragement()
+    {
+        string message = timeMessages[Random.Range(0, timeMessages.Length)];
+        ShowEncouragement(message);
+    }
+
+    private string[] GetScoreBasedMessages(int score)
+    {
+        if (score < 5)
+            return new string[] { "Getting started!", "Nice beginning!", "Keep going!" };
+        else if (score < 10)
+            return new string[] { "You're improving!", "Getting better!", "Great progress!" };
+        else if (score < 20)
+            return new string[] { "Impressive skills!", "You're a natural!", "Amazing flying!" };
+        else
+            return new string[] { "LEGENDARY!", "UNSTOPPABLE!", "FLAPPY BIRD MASTER!" };
+    }
+
+    private void ShowEncouragement(string message)
+    {
+        if (encouragementText == null) return;
+
+        // Stop previous encouragement if still showing
+        if (encouragementCoroutine != null)
+        {
+            StopCoroutine(encouragementCoroutine);
+        }
+
+        encouragementCoroutine = StartCoroutine(DisplayEncouragement(message));
+    }
+
+    private IEnumerator DisplayEncouragement(string message)
+    {
+        encouragementText.text = message;
+        encouragementText.gameObject.SetActive(true);
+
+        yield return new WaitForSeconds(encouragementDisplayTime);
+
+        encouragementText.gameObject.SetActive(false);
+        encouragementText.text = "";
     }
 
     public void GameOver()
@@ -395,6 +542,16 @@ public class GameManager : MonoBehaviour
 
         gameActive = false;
         gamePaused = false;
+
+        // Stop any encouragement text
+        if (encouragementCoroutine != null)
+        {
+            StopCoroutine(encouragementCoroutine);
+        }
+        if (encouragementText != null)
+        {
+            encouragementText.gameObject.SetActive(false);
+        }
 
         // Stop pipe spawning
         if (pipeSpawner != null)
