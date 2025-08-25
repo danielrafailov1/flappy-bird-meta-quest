@@ -10,6 +10,7 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI coinText;
     public TextMeshProUGUI collisionText;
     public TextMeshProUGUI timerText;
+    public Slider timerProgressBar;        // NEW: Progress bar for timer
     public GameObject gameOverPanel;
     public TextMeshProUGUI finalScoreText;
     public TextMeshProUGUI finalCoinText;
@@ -33,6 +34,9 @@ public class GameManager : MonoBehaviour
     public int scorePerPipe = 1;
     public int coinValue = 1;
     public float gameTime = 30f;
+
+    [Header("Spawner References")]
+    public PipeSpawner pipeSpawner;         // Drag your PipeSpawner GameObject here in inspector
 
     private int currentScore = 0;
     private int coinCount = 0;
@@ -94,6 +98,7 @@ public class GameManager : MonoBehaviour
         UpdateCoinUI();
         UpdateCollisionUI();
         UpdateTimerUI();
+        UpdateProgressBar();  // NEW: Initialize progress bar
 
         // Show start screen initially
         ShowStartScreen();
@@ -219,9 +224,20 @@ public class GameManager : MonoBehaviour
         UpdateCoinUI();
         UpdateCollisionUI();
         UpdateTimerUI();
+        UpdateProgressBar();  // NEW: Update progress bar
 
         // Start background music
         StartBackgroundMusic();
+
+        // Start pipe spawning
+        if (pipeSpawner != null)
+        {
+            pipeSpawner.StartSpawning();
+        }
+        else
+        {
+            Debug.LogWarning("PipeSpawner reference not assigned in GameManager!");
+        }
 
         // Resume time
         Time.timeScale = 1f;
@@ -244,6 +260,12 @@ public class GameManager : MonoBehaviour
         // Pause background music
         PauseBackgroundMusic();
 
+        // Stop pipe spawning when paused
+        if (pipeSpawner != null)
+        {
+            pipeSpawner.StopSpawning();
+        }
+
         // Pause time
         Time.timeScale = 0f;
     }
@@ -265,6 +287,12 @@ public class GameManager : MonoBehaviour
         // Resume background music
         ResumeBackgroundMusic();
 
+        // Resume pipe spawning when unpaused
+        if (pipeSpawner != null && gameActive)
+        {
+            pipeSpawner.StartSpawning();
+        }
+
         // Resume time
         Time.timeScale = 1f;
     }
@@ -273,23 +301,10 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("Quitting to start screen!");
 
-        // Reset game state
-        gameActive = false;
-        gameStarted = false;
-        gamePaused = false;
-
-        // Hide pause panel
-        if (pausePanel != null)
-        {
-            pausePanel.SetActive(false);
-        }
-
-        // Show start screen
-        ShowStartScreen();
-
-        // Resume time for UI interactions
+        // Resume time first (in case we were paused)
         Time.timeScale = 1f;
 
+        // Reload the scene to reset everything
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
@@ -301,6 +316,7 @@ public class GameManager : MonoBehaviour
         // Countdown timer
         currentTime -= Time.deltaTime;
         UpdateTimerUI();
+        UpdateProgressBar();  // NEW: Update progress bar each frame
 
         // Check if time is up
         if (currentTime <= 0)
@@ -320,6 +336,31 @@ public class GameManager : MonoBehaviour
         else
         {
             Debug.LogWarning("Timer Text not assigned!");
+        }
+    }
+
+    private void UpdateProgressBar()
+    {
+        if (timerProgressBar != null)
+        {
+            // Calculate progress (0 = full time, 1 = no time left)
+            float progress;
+
+            if (currentTime <= 0f)
+            {
+                progress = 1f; // Ensure it's completely full when time runs out
+            }
+            else
+            {
+                progress = 1f - (currentTime / gameTime);
+                progress = Mathf.Clamp01(progress); // Ensure it stays between 0 and 1
+            }
+
+            timerProgressBar.value = progress;
+        }
+        else
+        {
+            Debug.LogWarning("Timer Progress Bar not assigned!");
         }
     }
 
@@ -349,6 +390,12 @@ public class GameManager : MonoBehaviour
 
         gameActive = false;
         gamePaused = false;
+
+        // Stop pipe spawning
+        if (pipeSpawner != null)
+        {
+            pipeSpawner.StopSpawning();
+        }
 
         // Stop background music
         StopBackgroundMusic();

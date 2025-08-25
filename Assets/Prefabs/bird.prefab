@@ -68,5 +68,86 @@ PrefabInstance:
     m_RemovedGameObjects:
     - {fileID: 65702495048144492, guid: 2b0ec4ff1b48743908224ee4551a66c7, type: 3}
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2b0ec4ff1b48743908224ee4551a66c7, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7336728296179874826}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2b0ec4ff1b48743908224ee4551a66c7, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2083703299919878841}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2b0ec4ff1b48743908224ee4551a66c7, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6435966725532013425}
   m_SourcePrefab: {fileID: 100100000, guid: 2b0ec4ff1b48743908224ee4551a66c7, type: 3}
+--- !u!1 &6943686188958506952 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 2b0ec4ff1b48743908224ee4551a66c7, type: 3}
+  m_PrefabInstance: {fileID: 7826556988881724057}
+  m_PrefabAsset: {fileID: 0}
+--- !u!135 &7336728296179874826
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6943686188958506952}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 1
+  m_Center: {x: 0, y: 0.8, z: 0}
+--- !u!114 &2083703299919878841
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6943686188958506952}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 428d8f939d01e47adb02379018454f32, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  pipeTag: Pipe
+  coinTag: Coin
+  scoreZoneTag: ScoreZone
+  groundY: 0
+  useGroundY: 1
+  coinSound: {fileID: 0}
+  showColliderInfo: 1
+--- !u!54 &6435966725532013425
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6943686188958506952}
+  serializedVersion: 4
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0

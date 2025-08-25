@@ -11,16 +11,18 @@ public class PipeSpawner : MonoBehaviour
     public float spawnX = 10f;
     public float moveSpeed = 2f;
 
-    [Header("Coin Settings")]
-    public GameObject coinPrefab;
-    public int pipesPerCoin = 3;          // Spawn a coin every N pipes
+    [Header("References")]
+    public CoinSpawner coinSpawner;       // Reference to the CoinSpawner
 
     private float timer = 0f;
     private bool spawnBottomNext = true;  // Alternates between bottom and top pipes
-    private int pipeCounter = 0;
+    private bool isGameActive = false;    // Only spawn when game is active
 
     void Update()
     {
+        // Only spawn pipes when game is active
+        if (!isGameActive) return;
+
         timer += Time.deltaTime;
 
         if (timer >= spawnInterval)
@@ -28,6 +30,19 @@ public class PipeSpawner : MonoBehaviour
             SpawnPipe();
             timer = 0f;
         }
+    }
+
+    public void StartSpawning()
+    {
+        isGameActive = true;
+        timer = 0f; // Reset timer when starting
+        Debug.Log("Pipe spawning started!");
+    }
+
+    public void StopSpawning()
+    {
+        isGameActive = false;
+        Debug.Log("Pipe spawning stopped!");
     }
 
     private void SpawnPipe()
@@ -67,14 +82,16 @@ public class PipeSpawner : MonoBehaviour
             collider.size = new Vector3(0.02227314f, 0.02106743f, 0.07106968f);
             collider.center = new Vector3(-9.111848e-05f, 0.0001764514f, -0.02396321f);
 
-            // No need to divide by scale since you set it up manually with the correct scale already
-
             Debug.Log("BOTTOM PIPE - Pipe scale: " + scale);
             Debug.Log("BOTTOM PIPE - Added BoxCollider with size: " + collider.size);
             Debug.Log("BOTTOM PIPE - Collider center: " + collider.center);
             Debug.Log("BOTTOM PIPE - Actual world size: " + Vector3.Scale(collider.size, scale));
 
-          
+            // Notify coin spawner
+            if (coinSpawner != null)
+            {
+                coinSpawner.OnPipeSpawned(true, randomY, bottomPos);
+            }
         }
         else
         {
@@ -103,17 +120,19 @@ public class PipeSpawner : MonoBehaviour
             collider.size = new Vector3(0.02227314f, 0.02106743f, 0.07106968f);
             collider.center = new Vector3(-9.111848e-05f, 0.0001764514f, -0.02396321f);
 
-            // No need to divide by scale since you set it up manually with the correct scale already
-
             Debug.Log("TOP PIPE - Pipe scale: " + scale);
             Debug.Log("TOP PIPE - Added BoxCollider with size: " + collider.size);
             Debug.Log("TOP PIPE - Collider center: " + collider.center);
             Debug.Log("TOP PIPE - Actual world size: " + Vector3.Scale(collider.size, scale));
 
-           
+            // Notify coin spawner
+            if (coinSpawner != null)
+            {
+                coinSpawner.OnPipeSpawned(false, randomY, topPos);
+            }
         }
 
-     
+        // Create score zone
         if (bottomPos != Vector3.zero || topPos != Vector3.zero)
         {
             Vector3 scoreZonePos;
@@ -143,52 +162,6 @@ public class PipeSpawner : MonoBehaviour
             scoreZone.AddComponent<MoveLeft>().speed = moveSpeed;
 
             Debug.Log("Created score zone at: " + scoreZonePos);
-        }
-
-        // Increment pipe counter
-        pipeCounter++;
-
-        // Spawn a coin every N pipes, if both positions are set
-        // Replace this section in your PipeSpawner.cs:
-
-        // Spawn a coin every N pipes, if both positions are set
-        if (pipeCounter % pipesPerCoin == 0 && coinPrefab != null)
-        {
-            Debug.Log("SPAWNING COIN - pipeCounter: " + pipeCounter + ", pipesPerCoin: " + pipesPerCoin);
-
-            if (spawnBottomNext)
-            {
-                float coinY = (randomY + bottomPos.y + 4) / 2; // place it in the middle
-                Vector3 coinPos = new Vector3(spawnX, coinY, 0);
-                Debug.Log("Creating bottom coin at position: " + coinPos);
-                GameObject coin = Instantiate(coinPrefab, coinPos, Quaternion.identity);
-                coin.AddComponent<MoveLeft>().speed = moveSpeed;
-
-                // Add collider for coin collection
-                SphereCollider coinCollider = coin.AddComponent<SphereCollider>();
-                coinCollider.isTrigger = true;
-                coinCollider.center = new Vector3(8.733477e-07f, 8.109491e-07f, -9.726512e-08f);
-                coinCollider.radius = 0.001000873f;
-                coin.tag = "Coin";
-                Debug.Log("BOTTOM COIN - Added SphereCollider with radius: " + coinCollider.radius + " and tag: " + coin.tag);
-
-            }
-            else
-            {
-                float coinY = (randomY + topPos.y - 4) / 2; // place it in the middle
-                Vector3 coinPos = new Vector3(spawnX, coinY, 0);
-                Debug.Log("Creating top coin at position: " + coinPos);
-                GameObject coin = Instantiate(coinPrefab, coinPos, Quaternion.identity);
-                coin.AddComponent<MoveLeft>().speed = moveSpeed;
-
-                // Add collider for coin collection
-                SphereCollider coinCollider = coin.AddComponent<SphereCollider>();
-                coinCollider.isTrigger = true;
-                coinCollider.center = new Vector3(8.733477e-07f, 8.109491e-07f, -9.726512e-08f);
-                coinCollider.radius = 0.001000873f;
-                coin.tag = "Coin";
-                Debug.Log("TOP COIN - Added SphereCollider with radius: " + coinCollider.radius + " and tag: " + coin.tag);
-            }
         }
 
         // Flip for next spawn

@@ -15,9 +15,12 @@ public class BirdCollision : MonoBehaviour
     public AudioClip coinSound;  // Drag your coin MP3 here in the Inspector
     private AudioSource audioSource;
 
+    [Header("Debug Info")]
+    public bool showColliderInfo = true;  // Show collider info in console
+
     private bool hasCollided = false;
     private bool collisionEnabled = false;
-    private bool hasHitGround = false;  // NEW: Track if ground collision already registered
+    private bool hasHitGround = false;  // Track if ground collision already registered
 
     void Start()
     {
@@ -26,31 +29,50 @@ public class BirdCollision : MonoBehaviour
         // Enable collision detection after a short delay
         Invoke("EnableCollision", 0.5f);
 
-        // Make sure the bird has a collider
-        if (GetComponent<Collider>() == null)
+        // Check if bird has a collider (don't add one automatically)
+        Collider birdCollider = GetComponent<Collider>();
+        if (birdCollider == null)
         {
-            // Add a sphere collider if none exists
-            SphereCollider collider = gameObject.AddComponent<SphereCollider>();
-            collider.isTrigger = true; // Set as trigger for coin collection
-            collider.radius = 0.3f; // Make smaller to avoid unwanted collisions
-            Debug.Log("Added SphereCollider to bird with radius: " + collider.radius);
+            Debug.LogError("*** BIRD has NO collider! Coin collection will NOT work! ***");
         }
         else
         {
-            Debug.Log("Bird already has a collider");
+            Debug.Log("=== BIRD COLLIDER INFO ===");
+            Debug.Log("Bird collider found: " + birdCollider.GetType().Name);
+            Debug.Log("Bird position: " + transform.position);
+
+            if (birdCollider is SphereCollider sphereCol)
+            {
+                Debug.Log("SphereCollider - Center: " + sphereCol.center + ", Radius: " + sphereCol.radius);
+                Debug.Log("SphereCollider - Is Trigger: " + sphereCol.isTrigger);
+                Debug.Log("World center: " + (transform.position + sphereCol.center));
+                Debug.Log("World bounds: radius " + sphereCol.radius + " units from " + (transform.position + sphereCol.center));
+            }
+            else if (birdCollider is BoxCollider boxCol)
+            {
+                Debug.Log("BoxCollider - Center: " + boxCol.center + ", Size: " + boxCol.size);
+                Debug.Log("BoxCollider - Is Trigger: " + boxCol.isTrigger);
+            }
+            else if (birdCollider is CapsuleCollider capCol)
+            {
+                Debug.Log("CapsuleCollider - Center: " + capCol.center + ", Radius: " + capCol.radius + ", Height: " + capCol.height);
+                Debug.Log("CapsuleCollider - Is Trigger: " + capCol.isTrigger);
+            }
+            Debug.Log("=== END BIRD COLLIDER INFO ===");
         }
 
-        // Add Rigidbody for physics collision detection
-        if (GetComponent<Rigidbody>() == null)
+        // Check if bird has a Rigidbody (don't add one automatically)
+        Rigidbody rb = GetComponent<Rigidbody>();
+        if (rb == null)
         {
-            Rigidbody rb = gameObject.AddComponent<Rigidbody>();
-            rb.useGravity = false; // We don't want gravity for this game
-            rb.isKinematic = false; // Allow physics interactions
-            Debug.Log("Added Rigidbody to bird");
+            Debug.LogWarning("Bird has NO Rigidbody! Please add a Rigidbody manually if needed for physics collisions.");
         }
         else
         {
-            Debug.Log("Bird already has a Rigidbody");
+            if (showColliderInfo)
+            {
+                Debug.Log("Bird Rigidbody found - UseGravity: " + rb.useGravity + ", IsKinematic: " + rb.isKinematic);
+            }
         }
 
         // Setup audio source for coin sounds
@@ -99,30 +121,46 @@ public class BirdCollision : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
+        Debug.Log("=== TRIGGER DETECTED ===");
+        Debug.Log("Collision enabled: " + collisionEnabled);
+        Debug.Log("Other object: " + other.gameObject.name);
+        Debug.Log("Other tag: '" + other.tag + "'");
+        Debug.Log("Other position: " + other.transform.position);
+        Debug.Log("Bird position: " + transform.position);
+        Debug.Log("Distance: " + Vector3.Distance(transform.position, other.transform.position));
+
         if (!collisionEnabled)
         {
             Debug.Log("Collision ignored (not enabled yet): " + other.gameObject.name);
             return;
         }
 
-        Debug.Log("TRIGGER: Bird triggered with: " + other.gameObject.name + " (Tag: '" + other.tag + "')");
+        if (showColliderInfo)
+        {
+            Debug.Log("Other collider info: " + other.GetType().Name + " - IsTrigger: " + other.isTrigger);
 
-        //if (hasCollided) return;
+            // Show detailed collider info
+            if (other is SphereCollider sphereCol)
+            {
+                Debug.Log("Other SphereCollider - Center: " + sphereCol.center + ", Radius: " + sphereCol.radius);
+                Debug.Log("World center: " + (other.transform.position + sphereCol.center));
+            }
+        }
 
         // Check what we collided with
         if (other.CompareTag(coinTag))
         {
-            Debug.Log("Hit a coin!");
+            Debug.Log("*** COIN COLLISION DETECTED! ***");
             CollectCoin(other.gameObject);
         }
         else if (other.CompareTag(scoreZoneTag))
         {
             Debug.Log("Hit score zone!");
+            AddScore();
         }
         else if (other.CompareTag(pipeTag))
         {
             Debug.Log("Hit a pipe!");
-            //GameOver();
 
             if (GameManager.Instance != null)
             {
@@ -131,23 +169,20 @@ public class BirdCollision : MonoBehaviour
         }
         else
         {
-            Debug.Log("Hit untagged object: " + other.gameObject.name + " with tag: '" + other.tag + "'");
+            Debug.Log("Hit object with tag: '" + other.tag + "' (expected: '" + coinTag + "')");
         }
+        Debug.Log("=== END TRIGGER ===");
     }
 
     void OnCollisionEnter(Collision collision)
     {
         Debug.Log("Bird collided with: " + collision.gameObject.name + " (Tag: " + collision.gameObject.tag + ")");
 
-        //if (hasCollided) return;
-
         // Handle solid collisions (pipes, ground, etc.)
         if (collision.gameObject.CompareTag(pipeTag) ||
             collision.gameObject.CompareTag("Ground") ||
             collision.gameObject.CompareTag("Obstacle"))
         {
-            //GameOver();
-
             if (GameManager.Instance != null)
             {
                 GameManager.Instance.AddCollision();
@@ -157,7 +192,6 @@ public class BirdCollision : MonoBehaviour
         {
             // Hit something else with solid collision
             Debug.Log("Solid collision with untagged object: " + collision.gameObject.name);
-            //GameOver(); // End game anyway for now
 
             if (GameManager.Instance != null)
             {
